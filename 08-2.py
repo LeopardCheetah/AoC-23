@@ -1,95 +1,115 @@
-def val(string):
-    k = len(string) - 1
+'''
+# do some encoding
+
+def encode(s):
     c = 0
-    s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-
-    for i in string:
-        c += 40**k*s.index(i)
-        k -= 1
-
-        # if k == -1 and i == 'A':
-        #    print(string)
-    
+    # add first digit
+    c += 10000*(ord(s[0]) - ord('A') + 1)
+    c += 100*(ord(s[1]) - ord('A') + 1)
+    c += (ord(s[2]) - ord('A') + 1)
     return c
 
-
-start_two = [0, 1800, 5000, 37000, 25960, 28840]
-end = [2145, 41025, 19465, 2025, 29545, 31065] # XXZs
-
-def find(ls, value):
-    v = value
-
+def bins(ls, val):
+    # assuming val exists
     left = 0
     right = len(ls) - 1
-
     while left < right:
         mid = (left + right)//2
-
-        if ls[mid][0] > v:
-            # too big -> decrease right
+        if ls[mid] == val:
+            return mid
+        
+        if ls[mid] > val:
+            # aka gotta move to the left more
             right = mid - 1
             continue
-
-        if ls[mid][0] < v:
+        
+        if ls[mid] < val:
+            # aka gotta make mid higher
             left = mid + 1
             continue
-        
-        return mid
     
-    return left
+    return left # since left == right
 
 
 
-path = input().strip()
-buf = input()
+steps = input().strip()
+blank = input()
 
-m = []
+ls = []
 for _ in range(758):
-    ls = input().split()
+    # encode everything
+    # A --> 1, AA --> 100 + 1, AAA --> 10000 + 100 + 1
 
+    x = input().strip()
 
-    # m.append((ls[0], ls[2][1:-1], ls[3][:-1]))
-    m.append((val(ls[0]), val(ls[2][1:-1]), val(ls[3][:-1])))
-    continue
-
-m.sort()
-
-
-start = []
-for num in start_two:
-    start.append(m[find(m, num)])
-
-
-steps = 0
-now = start.copy()
-
-
-f = True
-while f:
-    # R or L?
-    # steps % len(path)
-    lst = []
-
-    if path[steps % len(path)] == 'R':
-        for item in now:
-            # go right
-            lst.append(m[find(m, item[2])])
-    else:
-        for item in now:
-            lst.append(m[find(m, item[1])])
-
-
-    steps += 1
-
-    # checker function for f
-
-    f = False
-    for pair in lst:
-        if pair[0] not in end:
-            f = True
-            break
+    # print(x[:3],end=' ') -- start
+    # print(x[7:10]) -- left
+    # print(x[12:15]) -- right
     
-    now = lst.copy()
+    start_node = x[:3]
+    left = x[7:10]
+    right = x[12:15]
+
+    # encode
+    ls.append((encode(start_node), encode(left), encode(right)))
 
 
-print('answer:', steps)
+ls.sort()
+first_vals = [pair[0] for pair in ls] # binsearch this list
+
+node_at = encode("SBA")
+ind = bins(first_vals, node_at)
+pointer = 0
+step_count = 0
+
+points_hit = []
+
+while len(points_hit) < 10: # ZZZ
+    if node_at % 100 == 26:
+        points_hit.append(step_count)
+    
+    # get new node
+    if pointer == len(steps):
+        pointer = 0
+        # easy
+
+    
+    if steps[pointer] == 'L':
+        # take a left
+        # next node is at ls[prev_ind][1]
+        node_at = ls[ind][1]
+        ind = bins(first_vals, node_at)
+    
+    if steps[pointer] == 'R':
+        node_at = ls[ind][2]
+        ind = bins(first_vals, node_at)
+
+    pointer += 1
+    step_count += 1
+
+print(points_hit)
+'''
+# AAA, BFA, DFA, XFA, QJA, SBA
+
+# for AAA, ls = [18023, 36046, 54069, 72092, 90115, 108138, 126161, 144184, 162207, 180230]
+# for BFA, ls = [19637, 39274, 58911, 78548, 98185, 117822, 137459, 157096, 176733, 196370]
+# for DFA, ls = [21251, 42502, 63753, 85004, 106255, 127506, 148757, 170008, 191259, 212510]
+# for XFA, ls = [16409, 32818, 49227, 65636, 82045, 98454, 114863, 131272, 147681, 164090]
+# for QJA, ls = [11567, 23134, 34701, 46268, 57835, 69402, 80969, 92536, 104103, 115670]
+# for SBA, ls = [14257, 28514, 42771, 57028, 71285, 85542, 99799, 114056, 128313, 142570]
+
+# lcm(ab)*gcd(ab) = ab
+
+
+def gcd(a, b):
+    while(b):
+        a, b = b, a % b
+    return a
+
+def lcm(a, b):
+    return a*b//gcd(a, b)
+
+print(lcm(lcm(18023, 19637), lcm(21251, 16409)))
+print(lcm(11567, 14257))
+
+print(lcm(6340257101, 613051))
